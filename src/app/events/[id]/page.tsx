@@ -11,6 +11,7 @@ import { EventChat } from "@/components/events/EventChat";
 import { EventReviews } from "@/components/events/EventReviews";
 import { HostAttendancePanel } from "@/components/events/HostAttendancePanel";
 import { VenueMap } from "@/components/events/VenueMap";
+import { ReportButton } from "@/components/safety/ReportButton";
 import { fetchEventDetail, deriveEventStats } from "@/lib/events";
 import { getSessionUser } from "@/lib/auth";
 import { formatLongDate, formatTime, formatPrice } from "@/lib/format";
@@ -147,6 +148,10 @@ export default async function EventDetailPage({
             eventId={event.id}
             canChat={isHost || (myStatus !== null && myStatus !== "cancelled")}
           />
+
+          <div className="mt-8">
+            <ReportButton targetType="event" targetId={event.id} signedIn={Boolean(user)} />
+          </div>
         </div>
 
         {/* Sidebar */}
