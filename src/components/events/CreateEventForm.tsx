@@ -20,7 +20,7 @@ export function CreateEventForm() {
       </div>
 
       <div>
-        <Label htmlFor="description" hint="(optional)">What's the session like?</Label>
+        <Label htmlFor="description" hint="(optional)">Describe the session</Label>
         <Textarea id="description" name="description" placeholder="Relaxed doubles, rotate everyone in, beginners welcome…" />
       </div>
 

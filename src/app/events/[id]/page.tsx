@@ -47,6 +47,8 @@ export default async function EventDetailPage({
   const myStatus =
     event.participants.find((p) => p.user_id === user?.id)?.status ?? null;
   const isHost = Boolean(user) && event.host_id === user?.id;
+  // Server component render; current time is intentional, not a render impurity.
+  // eslint-disable-next-line react-hooks/purity
   const startInPast = new Date(event.start_at).getTime() < Date.now();
   const attendees = event.participants.filter((p) =>
     ["joined", "attended", "no_show"].includes(p.status),

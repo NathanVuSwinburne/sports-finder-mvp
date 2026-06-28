@@ -146,6 +146,32 @@ export async function fetchEventMessages(
   return (data ?? []) as unknown as MessageWithProfile[];
 }
 
+export type MyParticipation = {
+  status: ParticipantStatus;
+  event: EventWithRelations;
+};
+
+/** Events the user has joined/waitlisted (not cancelled), with relations. */
+export async function fetchMyParticipations(
+  userId: string,
+): Promise<MyParticipation[]> {
+  if (!hasSupabaseEnv()) return [];
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("event_participants")
+    .select(
+      `status, event:events(*, venue:venues(*), host:profiles!events_host_id_fkey(*), participants:event_participants(status))`,
+    )
+    .eq("user_id", userId)
+    .neq("status", "cancelled");
+
+  if (error) {
+    console.error("fetchMyParticipations:", error.message);
+    return [];
+  }
+  return (data ?? []).filter((r) => r.event) as unknown as MyParticipation[];
+}
+
 export type ReviewWithReviewer = ReviewRow & {
   reviewer: ProfileRow | null;
 };
