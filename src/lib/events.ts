@@ -4,6 +4,8 @@ import type {
   EventRow,
   ProfileRow,
   VenueRow,
+  SportRow,
+  EventParticipantRow,
   ParticipantStatus,
 } from "@/types/database";
 
@@ -13,6 +15,17 @@ export type EventWithRelations = EventRow & {
   venue: VenueRow | null;
   host: ProfileRow | null;
   participants: ParticipantLite[];
+};
+
+export type ParticipantWithProfile = EventParticipantRow & {
+  profile: ProfileRow | null;
+};
+
+export type EventDetail = EventRow & {
+  venue: VenueRow | null;
+  host: ProfileRow | null;
+  sport: SportRow | null;
+  participants: ParticipantWithProfile[];
 };
 
 const SELECT = `
@@ -78,6 +91,31 @@ export async function fetchEventById(
     return null;
   }
   return (data as unknown as EventWithRelations) ?? null;
+}
+
+const DETAIL_SELECT = `
+  *,
+  venue:venues(*),
+  host:profiles!events_host_id_fkey(*),
+  sport:sports(*),
+  participants:event_participants(*, profile:profiles(*))
+`;
+
+/** A single event with venue, host, sport and full participant list (with profiles). */
+export async function fetchEventDetail(id: string): Promise<EventDetail | null> {
+  if (!hasSupabaseEnv()) return null;
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("events")
+    .select(DETAIL_SELECT)
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) {
+    console.error("fetchEventDetail:", error.message);
+    return null;
+  }
+  return (data as unknown as EventDetail) ?? null;
 }
 
 /** Unique, sorted suburb list from a set of events (for the filter dropdown). */
