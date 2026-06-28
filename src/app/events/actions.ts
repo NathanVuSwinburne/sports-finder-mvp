@@ -101,3 +101,27 @@ export async function leaveEventAction(
   revalidateEvent(eventId);
   return { ok: "You've left this event." };
 }
+
+/** Post a message to an event board. RLS allows only the host + joined players. */
+export async function postMessageAction(
+  _prev: JoinState,
+  formData: FormData,
+): Promise<JoinState> {
+  const eventId = String(formData.get("event_id") ?? "");
+  const body = String(formData.get("body") ?? "").trim();
+  const user = await getSessionUser();
+  if (!user) return { error: "Please sign in." };
+  if (!eventId) return { error: "Missing event." };
+  if (!body) return { error: "Message can't be empty." };
+  if (body.length > 1000) return { error: "Message is too long (max 1000)." };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("event_messages")
+    .insert({ event_id: eventId, user_id: user.id, body });
+
+  if (error) return { error: "Only joined players and the host can post here." };
+
+  revalidatePath(`/events/${eventId}`);
+  return { ok: "sent" };
+}

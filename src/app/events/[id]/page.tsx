@@ -7,6 +7,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import { ReliabilityBadge } from "@/components/ReliabilityBadge";
 import { PlayerList } from "@/components/events/PlayerList";
 import { JoinPanel } from "@/components/events/JoinPanel";
+import { EventChat } from "@/components/events/EventChat";
 import { VenueMap } from "@/components/events/VenueMap";
 import { fetchEventDetail, deriveEventStats } from "@/lib/events";
 import { getSessionUser } from "@/lib/auth";
@@ -113,6 +114,11 @@ export default async function EventDetailPage({
               <PlayerList title="Waitlist" players={waitlist} emptyText="Waitlist is empty." />
             )}
           </div>
+
+          <EventChat
+            eventId={event.id}
+            canChat={isHost || (myStatus !== null && myStatus !== "cancelled")}
+          />
         </div>
 
         {/* Sidebar */}

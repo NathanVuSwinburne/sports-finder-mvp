@@ -6,6 +6,7 @@ import type {
   VenueRow,
   SportRow,
   EventParticipantRow,
+  EventMessageRow,
   ParticipantStatus,
 } from "@/types/database";
 
@@ -116,6 +117,32 @@ export async function fetchEventDetail(id: string): Promise<EventDetail | null> 
     return null;
   }
   return (data as unknown as EventDetail) ?? null;
+}
+
+export type MessageWithProfile = EventMessageRow & {
+  profile: ProfileRow | null;
+};
+
+/**
+ * Messages for an event, oldest first. RLS restricts visibility to the host and
+ * joined players, so this returns [] for everyone else.
+ */
+export async function fetchEventMessages(
+  eventId: string,
+): Promise<MessageWithProfile[]> {
+  if (!hasSupabaseEnv()) return [];
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("event_messages")
+    .select("*, profile:profiles(*)")
+    .eq("event_id", eventId)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error("fetchEventMessages:", error.message);
+    return [];
+  }
+  return (data ?? []) as unknown as MessageWithProfile[];
 }
 
 /** Unique, sorted suburb list from a set of events (for the filter dropdown). */
