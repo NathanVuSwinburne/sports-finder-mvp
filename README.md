@@ -77,7 +77,8 @@ Run **in order**:
 2. `supabase/migrations/20260628000002_functions_triggers.sql` — profile auto-create, reliability counters, membership helper
 3. `supabase/migrations/20260628000003_rls.sql` — Row Level Security policies
 4. `supabase/migrations/20260628000004_waitlist.sql` — waitlist promotion + open/full sync
-5. `supabase/seed.sql` — demo data
+5. `supabase/migrations/20260628000005_grants.sql` — API role grants (fixes "permission denied")
+6. `supabase/seed.sql` — demo data (or run `npm run seed`)
 
 ## 🌱 Seed data
 

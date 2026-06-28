@@ -7,7 +7,9 @@ supabase/
 ├── migrations/
 │   ├── 20260628000001_schema.sql            # tables, enums, indexes
 │   ├── 20260628000002_functions_triggers.sql # profile auto-create, reliability counters, membership helper
-│   └── 20260628000003_rls.sql                # Row Level Security policies
+│   ├── 20260628000003_rls.sql                # Row Level Security policies
+│   ├── 20260628000004_waitlist.sql           # waitlist promotion + open/full sync
+│   └── 20260628000005_grants.sql             # API role grants (fixes "permission denied")
 └── seed.sql                                  # demo users, venues, events, reviews
 ```
 
