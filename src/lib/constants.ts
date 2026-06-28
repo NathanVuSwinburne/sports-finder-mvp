@@ -7,6 +7,15 @@ export const SKILL_OPTIONS: { value: SkillLevel; label: string }[] = [
   { value: "competitive", label: "Competitive" },
 ];
 
+export const SPORT_OPTIONS: { slug: string; label: string }[] = [
+  { slug: "badminton", label: "Badminton" },
+  { slug: "basketball", label: "Basketball" },
+  { slug: "soccer", label: "Soccer" },
+  { slug: "pickleball", label: "Pickleball" },
+  { slug: "volleyball", label: "Volleyball" },
+  { slug: "futsal", label: "Futsal" },
+];
+
 export const REVIEW_TAG_OPTIONS: { value: ReviewTag; label: string }[] = [
   { value: "beginner-friendly", label: "Beginner-friendly" },
   { value: "well-organised", label: "Well-organised" },
