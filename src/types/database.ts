@@ -21,7 +21,7 @@ export type ReviewTag =
   | "too-competitive"
   | "no-show-issue";
 
-export interface ProfileRow {
+export type ProfileRow = {
   id: string;
   display_name: string;
   avatar_url: string | null;
@@ -36,13 +36,13 @@ export interface ProfileRow {
   created_at: string;
 }
 
-export interface SportRow {
+export type SportRow = {
   id: string;
   name: string;
   slug: string;
 }
 
-export interface VenueRow {
+export type VenueRow = {
   id: string;
   name: string;
   address: string | null;
@@ -54,7 +54,7 @@ export interface VenueRow {
   created_at: string;
 }
 
-export interface EventRow {
+export type EventRow = {
   id: string;
   host_id: string;
   sport_id: string;
@@ -73,7 +73,7 @@ export interface EventRow {
   created_at: string;
 }
 
-export interface EventParticipantRow {
+export type EventParticipantRow = {
   id: string;
   event_id: string;
   user_id: string;
@@ -81,7 +81,7 @@ export interface EventParticipantRow {
   joined_at: string;
 }
 
-export interface EventMessageRow {
+export type EventMessageRow = {
   id: string;
   event_id: string;
   user_id: string;
@@ -89,7 +89,7 @@ export interface EventMessageRow {
   created_at: string;
 }
 
-export interface ReviewRow {
+export type ReviewRow = {
   id: string;
   event_id: string;
   reviewer_id: string;
@@ -100,7 +100,7 @@ export interface ReviewRow {
   created_at: string;
 }
 
-export interface ReportRow {
+export type ReportRow = {
   id: string;
   reporter_id: string;
   target_type: ReportTarget;
@@ -113,7 +113,12 @@ export interface ReportRow {
 type Insert<T, Optional extends keyof T> = Omit<T, Optional> &
   Partial<Pick<T, Optional>>;
 
-type TableDef<Row, Ins, Upd> = { Row: Row; Insert: Ins; Update: Upd };
+type TableDef<Row, Ins, Upd> = {
+  Row: Row;
+  Insert: Ins;
+  Update: Upd;
+  Relationships: [];
+};
 
 export interface Database {
   public: {

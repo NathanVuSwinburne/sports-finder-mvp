@@ -6,6 +6,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { ButtonLink } from "@/components/ui/Button";
 import { ReliabilityBadge } from "@/components/ReliabilityBadge";
 import { PlayerList } from "@/components/events/PlayerList";
+import { JoinPanel } from "@/components/events/JoinPanel";
 import { VenueMap } from "@/components/events/VenueMap";
 import { fetchEventDetail, deriveEventStats } from "@/lib/events";
 import { getSessionUser } from "@/lib/auth";
@@ -39,6 +40,10 @@ export default async function EventDetailPage({
   );
   const waitlist = event.participants.filter((p) => p.status === "waitlisted");
   const isActive = event.status === "open" || event.status === "full";
+  const myStatus =
+    event.participants.find((p) => p.user_id === user?.id)?.status ?? null;
+  const isHost = Boolean(user) && event.host_id === user?.id;
+  const startInPast = new Date(event.start_at).getTime() < Date.now();
 
   const location = [event.venue?.name, event.venue?.suburb]
     .filter(Boolean)
@@ -148,11 +153,21 @@ export default async function EventDetailPage({
                 </div>
               </div>
 
-              {/* Join / waitlist controls are wired in M6 */}
-              {isActive && !user && (
-                <ButtonLink href="/auth/sign-in?next=protected" className="w-full">
-                  Sign in to join
-                </ButtonLink>
+              {!user ? (
+                isActive && (
+                  <ButtonLink href="/auth/sign-in?next=protected" className="w-full">
+                    Sign in to join
+                  </ButtonLink>
+                )
+              ) : (
+                <JoinPanel
+                  eventId={event.id}
+                  myStatus={myStatus}
+                  isActive={isActive}
+                  startInPast={startInPast}
+                  isHost={isHost}
+                  spotsLeft={stats.spotsLeft}
+                />
               )}
 
               <div className="grid grid-cols-2 gap-2">
