@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { ProfileRow } from "@/types/database";
 import type { User } from "@supabase/supabase-js";
@@ -23,6 +24,13 @@ export async function getSessionUser(): Promise<User | null> {
   } catch {
     return null;
   }
+}
+
+/** Require an authenticated user; redirect to sign-in otherwise. */
+export async function requireUser(): Promise<User> {
+  const user = await getSessionUser();
+  if (!user) redirect("/auth/sign-in?next=protected");
+  return user;
 }
 
 /** Current user's profile row, or null. */
