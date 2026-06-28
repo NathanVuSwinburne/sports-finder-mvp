@@ -7,6 +7,7 @@ import type {
   SportRow,
   EventParticipantRow,
   EventMessageRow,
+  ReviewRow,
   ParticipantStatus,
 } from "@/types/database";
 
@@ -143,6 +144,29 @@ export async function fetchEventMessages(
     return [];
   }
   return (data ?? []) as unknown as MessageWithProfile[];
+}
+
+export type ReviewWithReviewer = ReviewRow & {
+  reviewer: ProfileRow | null;
+};
+
+/** Reviews left for an event (newest first), with reviewer profiles. */
+export async function fetchEventReviews(
+  eventId: string,
+): Promise<ReviewWithReviewer[]> {
+  if (!hasSupabaseEnv()) return [];
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("reviews")
+    .select("*, reviewer:profiles!reviews_reviewer_id_fkey(*)")
+    .eq("event_id", eventId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("fetchEventReviews:", error.message);
+    return [];
+  }
+  return (data ?? []) as unknown as ReviewWithReviewer[];
 }
 
 /** Unique, sorted suburb list from a set of events (for the filter dropdown). */

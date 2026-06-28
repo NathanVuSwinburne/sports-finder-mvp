@@ -8,6 +8,8 @@ import { ReliabilityBadge } from "@/components/ReliabilityBadge";
 import { PlayerList } from "@/components/events/PlayerList";
 import { JoinPanel } from "@/components/events/JoinPanel";
 import { EventChat } from "@/components/events/EventChat";
+import { EventReviews } from "@/components/events/EventReviews";
+import { HostAttendancePanel } from "@/components/events/HostAttendancePanel";
 import { VenueMap } from "@/components/events/VenueMap";
 import { fetchEventDetail, deriveEventStats } from "@/lib/events";
 import { getSessionUser } from "@/lib/auth";
@@ -45,6 +47,14 @@ export default async function EventDetailPage({
     event.participants.find((p) => p.user_id === user?.id)?.status ?? null;
   const isHost = Boolean(user) && event.host_id === user?.id;
   const startInPast = new Date(event.start_at).getTime() < Date.now();
+  const attendees = event.participants.filter((p) =>
+    ["joined", "attended", "no_show"].includes(p.status),
+  );
+  const canReview =
+    event.status === "completed" &&
+    Boolean(user) &&
+    !isHost &&
+    ["joined", "attended", "no_show"].includes(myStatus ?? "");
 
   const location = [event.venue?.name, event.venue?.suburb]
     .filter(Boolean)
@@ -114,6 +124,24 @@ export default async function EventDetailPage({
               <PlayerList title="Waitlist" players={waitlist} emptyText="Waitlist is empty." />
             )}
           </div>
+
+          {isHost && startInPast && (
+            <div className="mt-8">
+              <HostAttendancePanel
+                eventId={event.id}
+                players={attendees}
+                status={event.status}
+              />
+            </div>
+          )}
+
+          {event.status === "completed" && (
+            <EventReviews
+              eventId={event.id}
+              currentUserId={user?.id ?? null}
+              canReview={canReview}
+            />
+          )}
 
           <EventChat
             eventId={event.id}

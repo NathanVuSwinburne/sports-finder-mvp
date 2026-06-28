@@ -125,3 +125,103 @@ export async function postMessageAction(
   revalidatePath(`/events/${eventId}`);
   return { ok: "sent" };
 }
+
+/** Host marks a player attended / no-show. Reliability counters update via trigger. */
+export async function markAttendance(formData: FormData): Promise<void> {
+  const eventId = String(formData.get("event_id") ?? "");
+  const targetId = String(formData.get("user_id") ?? "");
+  const status = String(formData.get("status") ?? "");
+  const user = await getSessionUser();
+  if (!user || !eventId || !targetId) return;
+  if (status !== "attended" && status !== "no_show") return;
+
+  const supabase = await createClient();
+  const { data: ev } = await supabase
+    .from("events")
+    .select("host_id")
+    .eq("id", eventId)
+    .maybeSingle();
+  if (!ev || ev.host_id !== user.id) return; // host only
+
+  await supabase
+    .from("event_participants")
+    .update({ status })
+    .eq("event_id", eventId)
+    .eq("user_id", targetId);
+
+  revalidatePath(`/events/${eventId}`);
+}
+
+/** Host marks the event completed (unlocks attendance + reviews). */
+export async function completeEvent(formData: FormData): Promise<void> {
+  const eventId = String(formData.get("event_id") ?? "");
+  const user = await getSessionUser();
+  if (!user || !eventId) return;
+
+  const supabase = await createClient();
+  await supabase
+    .from("events")
+    .update({ status: "completed" })
+    .eq("id", eventId)
+    .eq("host_id", user.id);
+
+  revalidatePath(`/events/${eventId}`);
+}
+
+/** A joined player reviews the host after a completed event. */
+export async function submitReviewAction(
+  _prev: JoinState,
+  formData: FormData,
+): Promise<JoinState> {
+  const eventId = String(formData.get("event_id") ?? "");
+  const rating = Number(formData.get("rating") ?? 0);
+  const tags = formData.getAll("tags").map(String);
+  const comment = String(formData.get("comment") ?? "").trim();
+  const user = await getSessionUser();
+  if (!user) return { error: "Please sign in." };
+  if (!eventId) return { error: "Missing event." };
+  if (!(rating >= 1 && rating <= 5)) return { error: "Please choose a rating." };
+
+  const supabase = await createClient();
+
+  const { data: ev } = await supabase
+    .from("events")
+    .select("host_id, status")
+    .eq("id", eventId)
+    .maybeSingle();
+  if (!ev) return { error: "Event not found." };
+  if (ev.status !== "completed") {
+    return { error: "You can review once the event is completed." };
+  }
+  if (ev.host_id === user.id) return { error: "You can't review your own event." };
+
+  const { data: part } = await supabase
+    .from("event_participants")
+    .select("status")
+    .eq("event_id", eventId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!part || part.status === "cancelled" || part.status === "waitlisted") {
+    return { error: "Only players who joined can leave a review." };
+  }
+
+  const { error } = await supabase.from("reviews").insert({
+    event_id: eventId,
+    reviewer_id: user.id,
+    reviewee_id: ev.host_id,
+    rating,
+    tags,
+    comment: comment || null,
+  });
+  if (error) {
+    return {
+      error:
+        error.code === "23505"
+          ? "You've already reviewed this event."
+          : error.message,
+    };
+  }
+
+  revalidatePath(`/events/${eventId}`);
+  return { ok: "Thanks for your review!" };
+}
